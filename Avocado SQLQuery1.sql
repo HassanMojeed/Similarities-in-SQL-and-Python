@@ -1,47 +1,60 @@
 
 -- create database avocado;
+
 use avocado;
 
 -- selecting all columns in the table
-select count(*) total_records  from avocado;
+
+select count(*) as total_records
+from avocado;
 
 -- filtering by region
 
-select * from avocado where region like 'orlando';
+select * 
+from avocado 
+where region like 'orlando';
 
 --grouping by region
+
 select region,
-		AVG(averageprice) as price
+	AVG(averageprice) as price
 from avocado
 group by region;
 
 -- conditioned column
+
 with regional_average as(
-				select  region,
-						AVG(averageprice) as price
+			select  region,
+				AVG(averageprice) as price
 				from avocado
 				group by region
-				)
-	
+			)
 select region, 
-		case
-			when price > (select 
-						avg(averageprice) 
-						from avocado
-						)
-			then 'expensive'
-			else 'inexpensive'
-		end price_category
+       case
+	  when price > (select avg(averageprice) 
+			from avocado
+			)
+	  then 'expensive'
+	  else 'inexpensive'
+       end price_category
 from regional_average;
 
 GO
 
-select top 10 type, Small_Bags, Large_Bags
-from avocado order by Small_Bags desc, Large_Bags desc;
+-- selecting Top 10
+
+select top 10 type, 
+	      Small_Bags, 
+	      Large_Bags
+from avocado 
+order by Small_Bags desc, Large_Bags desc;
 go
 
 -- creating an unpivoted table
-select type, category, amount
+
+select type, 
+       category, 
+       amount
 from avocado
 unpivot(amount for category in (Small_Bags,Large_Bags)
 ) as unpivot_example;
@@ -63,35 +76,15 @@ pivot (sum(value) for year in ("2015","2016","2017","2018")
 Go
 
 
-drop view avocado_cleaned;
-GO
-
--- extracting the cleaned data
-create view avocado_cleaned 
-as
-select 
-	date, 
-	AveragePrice, 
-	Total_volume, 
-	Total_Bags, 
-	Small_Bags, 
-	Large_Bags, 
-	XLarge_Bags, 
+select category, 
 	type, 
-	year  
-from avocado;
-go
-select * from avocado_cleaned;
-go
-
-
-select category, type, value from avocado_cleaned
+	value 
+from avocado
 unpivot(value for category in (small_bags, large_bags, xlarge_bags)) as unpivoted_table;
 go
 
 -- merging tables in SQL
-select 
-	ac.date, 
+select 	ac.date, 
 	case 
 		when h.holiday is null 
 		then 'normal day'
@@ -103,6 +96,7 @@ on h.date = ac.date;
 go
 
 -- average price on normal and holiday
+
 with tab2 as(
 select 
 	ac.date, 
@@ -117,7 +111,7 @@ right join avocado_cleaned ac
 on h.date = ac.date
 )
 select category, 
-		avg(averageprice) as price 
+	avg(averageprice) as price 
 from tab2
 group by category
 order by price;
